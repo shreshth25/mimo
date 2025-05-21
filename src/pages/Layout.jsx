@@ -13,7 +13,7 @@ const Layout = () => {
         <div className="col-2 vh-100 bg-light border-end">
           <Navbar />
         </div>
-        <div className="col-10 p-4" style={{ overflowY: 'auto', height: '100vh' }}>
+        <div className="col-10" style={{ overflowY: 'hidden', height: '100vh' }}>
           <Outlet />
         </div>
       </div>

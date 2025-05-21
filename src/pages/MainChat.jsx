@@ -1,10 +1,19 @@
-import Users from './Users'
-import Chat from './Chat'
+import Users from "./Users";
+import Chat from "./Chat";
 
 const MainChat = () => {
   return (
-     <Chat/>
-  )
-}
+    <div className="d-flex vh-100 bg-white overflow-hidden">
+      <div className="border-end bg-white" style={{ width: '300px', overflowY: 'auto' }}>
+        <Users />
+      </div>
 
-export default MainChat
+      {/* Chat Section */}
+      <div className="flex-grow-1" style={{ overflowY: 'auto' }}>
+        <Chat />
+      </div>
+    </div>
+  );
+};
+
+export default MainChat;
