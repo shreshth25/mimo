@@ -14,11 +14,13 @@ const Login = () => {
 	const handleSubmit = async (e) => {
 		try {
 			e.preventDefault();
-			let res = await axios.post("http://127.0.0.1:5000/auth/login", { email, password });
-			console.log(res);
+			let res = await axios.post("http://localhost:4000/auth/login", { email, password });
 			if (res.status === 200) {
 				toast.success("login successful");
-				let data = res.data.data;
+				let data = {
+					'profile': res.data.data,
+					'token': res.data.data.token
+				}
 				dispatch(saveUser(data));
 			}
 		} catch (e) {

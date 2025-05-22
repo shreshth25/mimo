@@ -16,7 +16,6 @@ const Register = () => {
 		try {
 			e.preventDefault();
 			let res = await axios.post("http://127.0.0.1:5000/auth/register", { name, email, password });
-			console.log(res);
 			if (res.status === 200) {
 				toast.success('Register Successful')
 				let data = {
