@@ -1,6 +1,7 @@
+// Layout.jsx
 import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
-import Navbar from "../components/Navbar"; // This should be your sidebar
+import Navbar from "../components/Navbar";
 
 const Layout = () => {
   const { token } = useSelector((state) => state.auth);
@@ -8,14 +9,12 @@ const Layout = () => {
   if (!token) return <Navigate to="/login" />;
 
   return (
-    <div className="container-fluid p-0 m-0">
-      <div className="row g-0">
-        <div className="col-2 vh-100 bg-light border-end">
-          <Navbar />
-        </div>
-        <div className="col-10" style={{ overflowY: 'hidden', height: '100vh' }}>
-          <Outlet />
-        </div>
+    <div className="d-flex flex-column vh-100 overflow-hidden">
+      <div className="flex-shrink-0">
+        <Navbar />
+      </div>
+      <div className="flex-grow-1 overflow-hidden">
+        <Outlet />
       </div>
     </div>
   );

@@ -1,5 +1,3 @@
-import React from "react";
-
 const Profile = () => {
 	return (
 		<div className="d-flex bg-white vh-100  justify-content-center align-items-center">
@@ -19,7 +17,7 @@ const Profile = () => {
 					<label htmlFor="email" className="form-label">
 						Email
 					</label>
-					<input className="form-control" type="email" placeholder="Update the Email" readOnly/>
+					<input className="form-control" type="email" placeholder="Update the Email" readOnly />
 				</div>
 				<div className="mt-3">
 					<label htmlFor="email" className="form-label">

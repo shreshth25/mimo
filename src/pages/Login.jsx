@@ -1,42 +1,39 @@
-import axios from "axios";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { saveUser } from "../slices/authSlice";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { login } from "../utils/servies/auth";
 
 const Login = () => {
 	const [password, setPassword] = useState("");
 	const [email, setEmail] = useState("");
+	const navigate = useNavigate();
 
 	const dispatch = useDispatch();
 
-	const handleSubmit = async (e) => {
+	const handleLogin = async (e) => {
 		try {
 			e.preventDefault();
-			let res = await axios.post("http://localhost:4000/auth/login", { email, password });
-			if (res.status === 200) {
-				toast.success("login successful");
-				let data = {
-					'profile': res.data.data,
-					'token': res.data.data.token
-				}
-				dispatch(saveUser(data));
-			}
-		} catch (e) {
-			console.log(e);
-			toast.error(e.response?.data?.message || "Server Down");
+			const res = await login({ email, password });
+			let payload = {
+				profile: res.data,
+				token: res.data.token,
+			};
+			dispatch(saveUser(payload));
+			toast.success("Successfully logged In");
+			navigate("/home");
+		} catch (err) {
+			toast.error(err.message);
 		}
 	};
 	return (
-		<div
-			className="d-flex justify-content-center align-items-center min-vh-100"
-		>
+		<div className="d-flex justify-content-center align-items-center min-vh-100">
 			<div className="card p-4 shadow w-100" style={{ maxWidth: "600px", width: "400px" }}>
 				<h3 className="text-center mb-4 text-muted">
 					Create a account with <span style={{ color: "green" }}>MIMO</span>
 				</h3>
-				<form onSubmit={handleSubmit}>
+				<form onSubmit={handleLogin}>
 					<div className="mb-3">
 						<label htmlFor="email" className="form-label">
 							Email

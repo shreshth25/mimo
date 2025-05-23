@@ -6,8 +6,8 @@ import { IoIosLock } from "react-icons/io";
 import mimo from "../../src/assets/mimo.png";
 import useCustomSocket from "../utils/socket";
 import { useSelector } from "react-redux";
-import axios from "axios";
 import { toast } from "react-toastify";
+import { fetchChats } from "../utils/servies/chat";
 
 const Chat = ({ selectedUser }) => {
 	const end_mssg_ref = useRef();
@@ -16,8 +16,8 @@ const Chat = ({ selectedUser }) => {
 	const receiver_id = selectedUser?.user_id || null;
 	const { profile, token } = useSelector((state) => state.auth);
 	const sender_id = profile.user_id;
-
-	const socket  = useCustomSocket({ sender_id: sender_id });
+	const [isTyping, setIsTyping] = useState(false);
+	const socket = useCustomSocket({ sender_id: sender_id });
 
 	const handleMessage = () => {
 		if (message.trim() !== "") {
@@ -25,30 +25,46 @@ const Chat = ({ selectedUser }) => {
 				sender_id: sender_id,
 				receiver_id: receiver_id,
 				message: message,
-			}
+			};
 			socket.emit("send_message", new_message);
 			setMessage("");
 		}
 	};
 
-	useEffect(()=>{
+	useEffect(() => {
 		if (!socket) return;
 
-		const handleReceiveMessage=(data)=>{
-			if((data.sender_id == sender_id && data.receiver_id == receiver_id) ||
-				(data.sender_id == receiver_id && data.receiver_id == sender_id)
-			)
-			{
-				setMessagesList((prev)=>[...prev, data])
-			}	
-		}
+		const handleReceiveMessage = (data) => {
+			if (
+				(data.sender_id === sender_id && data.receiver_id === receiver_id) ||
+				(data.sender_id === receiver_id && data.receiver_id === sender_id)
+			) {
+				setMessagesList((prev) => [...prev, data]);
+			}
+		};
 
-		socket.on('receive_message', handleReceiveMessage);
+		const handleTyping = (data) => {
+			if (data.sender_id === receiver_id && data.receiver_id === sender_id) {
+				setIsTyping(true);
+			}
+		};
 
-		return ()=>{
-			socket.off('receive_message', handleReceiveMessage);
-		}
-	}, [socket, receiver_id])
+		const handleStopTyping = (data) => {
+			if (data.sender_id === receiver_id && data.receiver_id === sender_id) {
+				setIsTyping(false);
+			}
+		};
+
+		socket.on("receive_message", handleReceiveMessage);
+		socket.on("receive_typing", handleTyping);
+		socket.on("receive_stop_typing", handleStopTyping);
+
+		return () => {
+			socket.off("receive_message", handleReceiveMessage);
+			socket.off("receive_typing", handleTyping);
+			socket.off("receive_stop_typing", handleStopTyping);
+		};
+	}, [socket, receiver_id, sender_id]);
 
 	const handleKeyDown = (e) => {
 		if (e.key === "Enter" && e.shiftKey) {
@@ -59,35 +75,37 @@ const Chat = ({ selectedUser }) => {
 		}
 	};
 
-
-	const fetchChats = async()=>{
-        try {
-            let headers = {
-                'Authorization': `Bearer ${token}`,
-				'content-type': 'application/json'
-            }
+	const handleFetchChats = async () => {
+		try {
 			let data = {
-				'receiver_id': receiver_id
-			}
-			let res = await axios.post("http://localhost:4000/chat/", data, {
-                headers: headers
-            });
-			if (res.status === 200) {
-				setMessagesList(res.data.data)
-			}
+				receiver_id: receiver_id,
+			};
+			let res = await fetchChats(data);
+			setMessagesList(res.data);
 		} catch (e) {
-			console.log(e);
-			toast.error(e.response?.data?.message || "Server Down")
+			toast.error(e.message);
 		}
-    }
+	};
 
-    useEffect(()=>{
-		if(sender_id && receiver_id)
-		{
-        fetchChats()
+	useEffect(() => {
+		if (sender_id && receiver_id) {
+			handleFetchChats();
 		}
-    },[receiver_id])
+	}, [receiver_id]);
 
+	useEffect(() => {
+		if (sender_id && receiver_id) {
+			let data = {
+				sender_id,
+				receiver_id,
+			};
+			if (message.length > 0) {
+				socket.emit("send_typing", data);
+			} else {
+				socket.emit("send_stop_typing", data);
+			}
+		}
+	}, [message]);
 
 	useEffect(() => {
 		end_mssg_ref.current?.scrollIntoView();
@@ -102,7 +120,7 @@ const Chat = ({ selectedUser }) => {
 					<div className="text-muted">Your personal messages are end-to-end encrypted</div>
 				</div>
 			) : (
-				<div className="d-flex flex-column min-vh-100">
+				<div className="d-flex flex-column min-vh-100 bg-dark">
 					<div
 						className="d-flex justify-content-between align-items-center px-3 py-3 bg-success bg-gradient border border-secondary"
 						style={{
@@ -121,10 +139,14 @@ const Chat = ({ selectedUser }) => {
 								padding: "1px",
 							}}
 						/>
-						<div className="text-bold text-white">{selectedUser.name}</div>
+						<div className="d-flex flex-column">
+							<div className="text-bold text-white">{selectedUser.name}</div>
+							<div className="text-white">{isTyping && "Typing...."}</div>
+						</div>
+
 						<BsThreeDotsVertical className="text-white" />
 					</div>
-					<div className="card-body flex-grow-1 overflow-auto">
+					<div className="mt-5 card-body flex-grow-1 overflow-auto">
 						{messagesList.map((msg, index) => (
 							<RenderMessage msg={msg} key={index} />
 						))}
